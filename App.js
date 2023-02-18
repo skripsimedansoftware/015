@@ -1,24 +1,26 @@
-import { View, Text, StyleSheet } from 'react-native'
-import React from 'react'
+// import { StyleSheet } from 'react-native';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import React from "react";
+
+import HomeScreen from "./screens/Home";
+import WelcomeScreen from "./screens/Welcome";
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <View style={{
-      flex: 1,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <Text style={{ fontWeight: 'bold' }}>SKRIPSI</Text>
-    </View>
-  )
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Welcome">
+        <Stack.Screen
+          name="Welcome"
+          component={WelcomeScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen name="Home" component={HomeScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
