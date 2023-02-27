@@ -18,6 +18,10 @@
         "extensions": [".js", ".jsx"]
       }
     ],
-    "semi": "off"
+    "semi": "off",
+    "quotes": ["warn", "double"],
+    "no-unused-vars": "warn",
+    "no-console": "off",
+    "import/no-extraneous-dependencies": "off"
   }
 }
