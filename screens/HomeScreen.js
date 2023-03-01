@@ -21,7 +21,7 @@ import AppBar from "../components/AppBar";
 import UINSULogo from "../assets/logo.png";
 
 const API = axios.create({
-  baseURL: "http://192.168.43.76:8080",
+  baseURL: "http://192.168.8.15:8080",
 });
 
 export default function HomeScreen({ navigation, route }) {
@@ -92,7 +92,6 @@ export default function HomeScreen({ navigation, route }) {
         >
           {headerMessage.show && (
             <Alert
-              maxW="400"
               variant={headerMessage.varian}
               status={headerMessage.status}
               ml={2}
@@ -271,7 +270,7 @@ export default function HomeScreen({ navigation, route }) {
 
                       navigation.navigate("ResultScreen", {
                         data: data.data,
-                        API,
+                        baseURL: API.defaults.baseURL,
                         training: {
                           active: trainingModeActive,
                           label: trainLabel,

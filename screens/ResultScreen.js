@@ -36,7 +36,7 @@ export default function ResultScreen({ navigation, route }) {
         data={Object.keys(data)}
         scrollEnabled
         renderItem={({ item }) => {
-          const list = ["correlation", "homogenity", "contrast", "energy"];
+          const list = ["homogeneity", "contrast", "energy"];
           if (list.indexOf(item.split("_")[0]) !== -1) {
             return (
               <Box borderBottomWidth="1" pl={["4", "4"]} pr={["4", "5"]} py="2">
@@ -102,14 +102,14 @@ export default function ResultScreen({ navigation, route }) {
           }}
           onPress={() => {
             navigation.navigate("ImageScreen", {
-              uri: `${route.params.API.defaults.baseURL}/uploads/${route.params?.data?.images.grayscale}`,
+              uri: `${route.params.baseURL}/uploads/${route.params?.data?.images.grayscale}`,
             });
           }}
         >
           <Image
             alt="Grayscale"
             source={{
-              uri: `${route.params.API.defaults.baseURL}/uploads/${route.params?.data?.images.grayscale}`,
+              uri: `${route.params.baseURL}/uploads/${route.params?.data?.images.grayscale}`,
             }}
             style={{
               height: "88%",
@@ -129,14 +129,14 @@ export default function ResultScreen({ navigation, route }) {
           }}
           onPress={() => {
             navigation.navigate("ImageScreen", {
-              uri: `${route.params.API.defaults.baseURL}/uploads/${route.params?.data?.images.texture}`,
+              uri: `${route.params.baseURL}/uploads/${route.params?.data?.images.texture}`,
             });
           }}
         >
           <Image
             alt="Texture"
             source={{
-              uri: `${route.params.API.defaults.baseURL}/uploads/${route.params?.data?.images.texture}`,
+              uri: `${route.params.baseURL}/uploads/${route.params?.data?.images.texture}`,
             }}
             style={{
               height: "88%",
