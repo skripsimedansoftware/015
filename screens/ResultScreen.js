@@ -73,7 +73,7 @@ export default function ResultScreen({ navigation, route }) {
     </Box>
   );
 
-  const displayKNN = () => (
+  const displayKNN = (data) => (
     <Box
       style={{
         flex: 1,
@@ -86,6 +86,24 @@ export default function ResultScreen({ navigation, route }) {
         {" "}
         <Text fontSize="md">(K-Nearest Neighbors)</Text>
       </Heading>
+      <Box borderBottomWidth="1" pl={["4", "4"]} pr={["4", "5"]} py="2">
+        <HStack space={[2, 3]} justifyContent="space-between">
+          <VStack>
+            <Text fontSize="md">Klasifikasi</Text>
+          </VStack>
+          <Text
+            fontSize="md"
+            _dark={{
+              color: "warmGray.50",
+            }}
+            color="coolGray.800"
+            alignSelf="flex-start"
+            dir
+          >
+            {data.label}
+          </Text>
+        </HStack>
+      </Box>
     </Box>
   );
 
