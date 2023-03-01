@@ -46,12 +46,12 @@ export default function CameraScreen({ navigation }) {
               setText(
                 `Ganti Kamera ${
                   type === Camera.Constants.Type.back ? "Belakang" : "Depan"
-                }`
+                }`,
               );
               setType(
                 type === Camera.Constants.Type.back
                   ? Camera.Constants.Type.front
-                  : Camera.Constants.Type.back
+                  : Camera.Constants.Type.back,
               );
             }}
           >

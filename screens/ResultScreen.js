@@ -29,7 +29,10 @@ export default function ResultScreen({ navigation, route }) {
       }}
     >
       <Heading fontSize="xl" p="4" pb="3">
-        GLCM <Spacer />{" "}
+        GLCM
+        {" "}
+        <Spacer />
+        {" "}
         <Text fontSize="md">(Gray Color Co-occurrence Matrix)</Text>
       </Heading>
       <FlatList
@@ -43,7 +46,9 @@ export default function ResultScreen({ navigation, route }) {
                 <HStack space={[2, 3]} justifyContent="space-between">
                   <VStack>
                     <Text fontSize="md">
-                      {item.split("_")[0]} {item.split("_")[1]}
+                      {item.split("_")[0]}
+                      {" "}
+                      {item.split("_")[1]}
                     </Text>
                   </VStack>
                   <Text
@@ -75,7 +80,11 @@ export default function ResultScreen({ navigation, route }) {
       }}
     >
       <Heading fontSize="xl" p="4" pb="3">
-        KNN <Spacer /> <Text fontSize="md">(K-Nearest Neighbors)</Text>
+        KNN
+        {" "}
+        <Spacer />
+        {" "}
+        <Text fontSize="md">(K-Nearest Neighbors)</Text>
       </Heading>
     </Box>
   );

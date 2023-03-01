@@ -11,7 +11,8 @@
     "prepare": "husky install"
   },
   "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+    "**/*": "prettier --write --ignore-unknown",
+    "**/*.js": "eslint --fix"
   },
   "dependencies": {
     "@expo/vector-icons": "^13.0.0",

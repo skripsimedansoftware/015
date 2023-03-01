@@ -292,7 +292,7 @@ export default function HomeScreen({ navigation, route }) {
                         placement: "bottom",
                         variant: "subtle",
                       });
-                    }
+                    },
                   );
                 }}
               >
