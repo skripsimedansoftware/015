@@ -15,11 +15,28 @@ const multer = require('multer');
 const Jimp = require('jimp');
 const { readFileSync } = require('node:fs');
 const mime = require('mime');
+const KNN = require('ml-knn');
 const childProcess = require('node:child_process');
 const { sequelize, DataTraining } = require('./database');
 
 sequelize.sync({
   truncate: true,
+});
+
+const trainData = {
+  dataSets: [],
+  dataLabels: [],
+};
+
+let knn;
+
+DataTraining.findAll().then((train) => {
+  train.forEach((item) => {
+    trainData.dataSets.push(Object.values(JSON.parse(item.data)));
+    trainData.dataLabels.push(item.label);
+  });
+
+  knn = new KNN(trainData.dataSets, trainData.dataLabels);
 });
 
 const storage = multer.diskStorage({
@@ -103,8 +120,13 @@ const imageProcessing = async (req, res, next) => {
       texture: `${fileName}-texture.${fileExt}`,
     };
 
+    const predict = knn.predict(Object.values(GLCMData));
+
     res.data = {
       glcm: GLCMData,
+      knn: {
+        label: predict,
+      },
       images,
     };
 
@@ -148,6 +170,7 @@ app.post('/upload', upload.single('image'), imageProcessing, async (req, res) =>
 
 app.use((req, res, next) => next(HTTPErrors(404)));
 app.use((error, req, res, next) => {
+  console.log(error);
   const errorStatus = error.status || 500;
   if (res.headersSent) {
     return next();
