@@ -19,7 +19,7 @@ const childProcess = require('node:child_process');
 const { sequelize, DataTraining } = require('./database');
 
 sequelize.sync({
-  force: false,
+  truncate: true,
 });
 
 const storage = multer.diskStorage({
@@ -68,20 +68,6 @@ new Nunjucks.Environment(
 app.use(morgan('dev'));
 app.use('/uploads', express.static('./uploads'));
 
-app.get('/', (req, res, next) => {
-  DataTraining.findAll().then((dataTraining) => {
-    res.json({
-      status: 'success',
-      data: dataTraining.map((item) => ({
-        id: item.id,
-        label: item.label,
-        data: JSON.parse(item.data),
-        images: JSON.parse(item.images),
-      })),
-    });
-  }, next);
-});
-
 const imageProcessing = async (req, res, next) => {
   try {
     const file = readFileSync(req.file.path);
@@ -117,19 +103,18 @@ const imageProcessing = async (req, res, next) => {
       texture: `${fileName}-texture.${fileExt}`,
     };
 
-    if (req.body.train) {
-      DataTraining.create({
-        label: req.body.label,
-        data: JSON.stringify(GLCMData),
-        images: JSON.stringify(images),
-      }).then(() => {
-      }, next);
-    }
-
-    res.image = {
+    res.data = {
       glcm: GLCMData,
       images,
     };
+
+    if (req.body.train) {
+      await DataTraining.create({
+        label: req.body.label,
+        data: JSON.stringify(GLCMData),
+        images: JSON.stringify(images),
+      });
+    }
 
     return next();
   } catch (error) {
@@ -140,10 +125,24 @@ const imageProcessing = async (req, res, next) => {
   }
 };
 
+app.get('/', (req, res, next) => {
+  DataTraining.findAll().then((dataTraining) => {
+    res.json({
+      status: 'success',
+      data: dataTraining.map((item) => ({
+        id: item.id,
+        label: item.label,
+        data: JSON.parse(item.data),
+        images: JSON.parse(item.images),
+      })),
+    });
+  }, next);
+});
+
 app.post('/upload', upload.single('image'), imageProcessing, async (req, res) => {
   res.json({
     status: 'success',
-    data: res.image,
+    data: res.data,
   });
 });
 
