@@ -48,7 +48,9 @@ from skimage.feature import graycomatrix, graycoprops
 
 # ----------------- call calc_glcm_all_agls() for all properties ----------------------------------
 
-properties = ['dissimilarity', 'correlation', 'homogeneity', 'contrast', 'ASM', 'energy']
+# properties = ['dissimilarity', 'correlation', 'homogeneity', 'contrast', 'ASM', 'energy']
+properties = ['contrast', 'energy', 'homogeneity']
 
-result = calc_glcm_all_agls(resize, props=properties)
+# result = calc_glcm_all_agls(resize, props=properties)
+result = calc_glcm_all_agls(gray, props=properties)
 print(result)
