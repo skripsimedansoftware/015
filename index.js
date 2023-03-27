@@ -77,7 +77,7 @@ sequelize.sync({
       fs.renameSync(req.file.path, `${filePath}/${fileName}.${fileExt}`);
 
       const grayscale = image.clone().grayscale();
-      await grayscale.write(`${filePath}/${fileName}-grayscale.${fileExt}`);
+      grayscale.write(`${filePath}/${fileName}-grayscale.${fileExt}`);
 
       grayscale.convolute([[-2, -1, 0], [-1, 1, 1], [0, 1, 2]]).write(`${filePath}/${fileName}-texture.${fileExt}`);
 
@@ -188,5 +188,9 @@ sequelize.sync({
   });
 
   const server = http.createServer(app);
+  server.on('listening', () => {
+    console.log(`Server started on port ${server.address().port}`);
+  });
+
   server.listen(process.env.PORT || 8080);
 });
