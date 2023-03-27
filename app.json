@@ -1,13 +1,18 @@
 {
   "expo": {
-    "name": "mobile-app",
-    "slug": "mobile-app",
+    "name": "Egg Checker",
+    "slug": "egg-checker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "plugins": [
-      ["expo-image-picker", { "photosPermission": "Pengen liat galerimu" }]
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pengen liat galerimu"
+        }
+      ]
     ],
     "splash": {
       "image": "./assets/uinsu-splash.png",
@@ -25,10 +30,17 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "permissions": ["android.permission.RECORD_AUDIO"],
+      "package": "com.medansoftware.eggchecker"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d006363b-1831-4c41-9cce-1ed3a3d7c5f3"
+      }
     }
   }
 }

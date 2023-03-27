@@ -18,8 +18,11 @@ export default function ResultScreen({ navigation, route }) {
     navigation.setOptions({
       title: route.params.training.active
         ? `Data Latih ${route.params.training.label}`
-        : "Hasil Klasifikasi",
+        : `Hasil Klasifikasi : ${route.params.data.KNN.current.label}`,
     });
+
+    // console.log('KNN', route.params.data.KNN)
+    // console.log('GLCM', route.params.data.GLCM)
   }, []);
 
   const displayGLCM = (data) => (
@@ -33,13 +36,15 @@ export default function ResultScreen({ navigation, route }) {
         {" "}
         <Spacer />
         {" "}
-        <Text fontSize="md">(Gray Color Co-occurrence Matrix)</Text>
+        <Text fontSize="sm" color="pink.800">
+          (Gray Color Co-occurrence Matrix)
+        </Text>
       </Heading>
       <FlatList
         data={Object.keys(data)}
         scrollEnabled
         renderItem={({ item }) => {
-          const list = ["homogeneity", "contrast", "energy"];
+          const list = ["contrast", "energy", "homogeneity"];
           if (list.indexOf(item.split("_")[0]) !== -1) {
             return (
               <Box borderBottomWidth="1" pl={["4", "4"]} pr={["4", "5"]} py="2">
@@ -84,24 +89,35 @@ export default function ResultScreen({ navigation, route }) {
         {" "}
         <Spacer />
         {" "}
-        <Text fontSize="md">(K-Nearest Neighbors)</Text>
+        <Text fontSize="sm" color="pink.800">
+          (K-Nearest Neighbors)
+        </Text>
       </Heading>
       <Box borderBottomWidth="1" pl={["4", "4"]} pr={["4", "5"]} py="2">
         <HStack space={[2, 3]} justifyContent="space-between">
-          <VStack>
-            <Text fontSize="md">Klasifikasi</Text>
-          </VStack>
-          <Text
-            fontSize="md"
-            _dark={{
-              color: "warmGray.50",
-            }}
-            color="coolGray.800"
-            alignSelf="flex-start"
-            dir
-          >
-            {data.label}
-          </Text>
+          <FlatList
+            data={data.results}
+            scrollEnabled
+            renderItem={({ item }) => (
+              <Box borderBottomWidth="0" pl={["4", "4"]} pr={["4", "5"]} py="2">
+                <HStack space={[2, 3]} justifyContent="space-between">
+                  <VStack>
+                    <Text fontSize="lg" fontWeight="bold" color="green.800">
+                      {item.label}
+                    </Text>
+                  </VStack>
+                  <Text
+                    fontSize="lg"
+                    color="blue.800"
+                    alignSelf="flex-start"
+                    dir
+                  >
+                    {item.distance}
+                  </Text>
+                </HStack>
+              </Box>
+            )}
+          />
         </HStack>
       </Box>
     </Box>
@@ -181,16 +197,16 @@ export default function ResultScreen({ navigation, route }) {
           flex: 4,
         }}
       >
-        {route.params?.data?.glcm && (
+        {route.params?.data?.GLCM && (
           <View
             style={{
               flex: route.params.training.active ? 4 : 1,
             }}
           >
-            {displayGLCM(route.params.data.glcm)}
+            {displayGLCM(route.params.data.GLCM)}
           </View>
         )}
-        {route.params?.data?.knn && displayKNN(route.params.data.knn)}
+        {route.params?.data?.KNN && displayKNN(route.params.data.KNN)}
       </View>
     </View>
   );

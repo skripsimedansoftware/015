@@ -21,7 +21,7 @@ import AppBar from "../components/AppBar";
 import UINSULogo from "../assets/logo.png";
 
 const API = axios.create({
-  baseURL: "http://192.168.8.15:8080",
+  baseURL: "http://192.168.43.76:8081",
 });
 
 export default function HomeScreen({ navigation, route }) {
