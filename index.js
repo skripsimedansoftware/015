@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-undef */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-await-in-loop */
@@ -15,21 +17,84 @@ const multer = require('multer');
 const Jimp = require('jimp');
 const { readFileSync } = require('node:fs');
 const mime = require('mime');
-// const KNN = require('ml-knn');
 const childProcess = require('node:child_process');
-const { sequelize, DataTraining } = require('./database');
+const { sequelize, DataTrainingGLCM, DataTrainingHistogram } = require('./database');
 
 sequelize.sync({
   alter: true,
 }).then(() => {
   const storage = multer.diskStorage({
     destination: (req, file, callback) => callback(null, path.join(__dirname, 'uploads')),
-    filename: (req, file, callback) => callback(null, `${crypto.randomBytes(20).toString('hex')}`),
+    filename: (req, file, callback) => {
+      DataTrainingGLCM.count().then((count) => {
+        const { label, increment } = req.body;
+        const fileName = label ? label.toLowerCase().replace(/\s/g, '-') : crypto.randomBytes(20).toString('hex');
+        callback(null, `${fileName}-${!Number.isNaN(parseFloat(increment)) ? parseFloat(increment) : count + 1}`);
+      }, callback);
+    },
   });
 
   const upload = multer({ storage });
 
   const app = express();
+
+  app.use(express.json());
+  app.use(express.raw());
+  app.use(express.urlencoded({ extended: true }));
+
+  function ColorHistogram(image) {
+    function rgbToHsv(r, g, b) {
+      r /= 255;
+      g /= 255;
+      b /= 255;
+
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h; const
+        v = max;
+
+      const d = max - min;
+      const s = max === 0 ? 0 : d / max;
+
+      if (max === min) {
+        h = 0; // grayscale
+      } else {
+        switch (max) {
+          case r:
+            h = (g - b) / d + (g < b ? 6 : 0);
+            break;
+          case g:
+            h = (b - r) / d + 2;
+            break;
+          case b:
+            h = (r - g) / d + 4;
+            break;
+
+          default:
+            break;
+        }
+        h /= 6;
+      }
+
+      return { hue: h * 360, saturation: s, value: v };
+    }
+    const histogram = [];
+
+    for (let i = 0; i < 16; i++) {
+      histogram[i] = 0;
+    }
+
+    image.scan(0, 0, image.bitmap.width, image.bitmap.height, function pixel(x, y, idx) {
+      const red = this.bitmap.data[idx + 0];
+      const green = this.bitmap.data[idx + 1];
+      const blue = this.bitmap.data[idx + 2];
+      const hsv = rgbToHsv(red, green, blue);
+      const hue = Math.floor(hsv.hue * (16 / 360));
+      histogram[hue]++;
+    });
+
+    return histogram;
+  }
 
   const GLCM = (file) => new Promise((resolve, reject) => {
     const glcm = childProcess.spawn('python', ['GLCM.py', file]);
@@ -63,22 +128,43 @@ sequelize.sync({
 
   app.use(morgan('dev'));
   app.use('/uploads', express.static('./uploads'));
+  app.get('/data', async (req, res, next) => {
+    try {
+      const GLCMTraining = await DataTrainingGLCM.findAll();
+      const GLCMData = GLCMTraining.map((item) => ({
+        label: item.label,
+        data: JSON.parse(item.data),
+        images: JSON.parse(item.images),
+      }));
+      res.json({
+        GLCM: GLCMData,
+      });
+    } catch (e) {
+      next(e);
+    }
+    // DataTrainingGLCM.findAll().then((data) => {
+    //   res.json(data.map((item) => ({
+    //     ...item.dataValues,
+    //     GLCM: JSON.parse(item.data),
+    //     images: JSON.parse(item.images),
+    //   })));
+    // }, next);
+  });
 
   const imageProcessing = async (req, res, next) => {
     try {
       const file = readFileSync(req.file.path);
       const image = await Jimp.read(file);
+      const colorHistogram = ColorHistogram(image);
       const { _originalMime } = image;
       const filePath = path.dirname(req.file.path);
       const fileName = path.basename(req.file.path);
       const fileExt = mime.getExtension(_originalMime);
+      const grayscale = image.clone().grayscale();
 
-      // rename file
       fs.renameSync(req.file.path, `${filePath}/${fileName}.${fileExt}`);
 
-      const grayscale = image.clone().grayscale();
       grayscale.write(`${filePath}/${fileName}-grayscale.${fileExt}`);
-
       grayscale.convolute([[-2, -1, 0], [-1, 1, 1], [0, 1, 2]]).write(`${filePath}/${fileName}-texture.${fileExt}`);
 
       let num = 0;
@@ -100,7 +186,7 @@ sequelize.sync({
       };
 
       const KNN = new Promise((resolve, reject) => {
-        DataTraining.findAll().then((rows) => {
+        DataTrainingGLCM.findAll().then((rows) => {
           const train = rows.map((item) => ({
             label: item.label,
             criteria: Object.values(JSON.parse(item.data)),
@@ -122,24 +208,65 @@ sequelize.sync({
         }, reject);
       });
 
-      const KNNResult = await KNN;
-      const distances = KNNResult.map((item) => item.distance);
-      const KNNIndex = KNNResult.findIndex((val) => val.distance === Math.min(...distances));
+      const KNNColorHistogram = new Promise((resolve, reject) => {
+        DataTrainingHistogram.findAll().then((rows) => {
+          const train = rows.map((item) => ({
+            label: item.label,
+            criteria: JSON.parse(item.data),
+          }));
+
+          const euclidean = train.map((data) => {
+            const distance = data.criteria
+              .map((val, k) => (colorHistogram[k] - val) ** 2)
+              .reduce((a, b) => a + b, 0);
+
+            return {
+              label: data.label,
+              distance,
+            };
+          });
+
+          resolve(euclidean);
+        }, reject);
+      });
 
       res.data = {
-        KNN: {
-          current: KNNResult[KNNIndex],
-          results: KNNResult,
-        },
         GLCM: GLCMData,
+        colorHistogram,
         images,
       };
 
-      if (req.body.train) {
-        await DataTraining.create({
+      if (req.body?.train.toString().toLowerCase() === 'false') {
+        const KNNResultGLCM = await KNN;
+        const KNNResultColorHistogram = await KNNColorHistogram;
+
+        const GLCMdistances = KNNResultGLCM.map((item) => item.distance);
+        const KNNGLCMIndex = KNNResultGLCM.findIndex((val) => val.distance === Math.min(...GLCMdistances));
+
+        const Histogramdistances = KNNResultGLCM.map((item) => item.distance);
+        const KNNHistogramIndex = KNNResultGLCM.findIndex((val) => val.distance === Math.min(...Histogramdistances));
+        Object.assign(res.data, {
+          KNNGLCM: {
+            current: KNNResultGLCM[KNNGLCMIndex],
+            results: KNNResultGLCM,
+          },
+          KNNColorHistogram: {
+            current: KNNResultColorHistogram[KNNHistogramIndex],
+            results: KNNResultColorHistogram,
+          },
+        });
+      }
+
+      if (req.body?.train.toString().toLowerCase() === 'true') {
+        await DataTrainingGLCM.create({
           label: req.body.label,
           data: JSON.stringify(GLCMData),
           images: JSON.stringify(images),
+        });
+
+        await DataTrainingHistogram.create({
+          label: req.body.label,
+          data: JSON.stringify(colorHistogram),
         });
       }
 
@@ -152,8 +279,11 @@ sequelize.sync({
     }
   };
 
-  app.get('/', (req, res, next) => {
-    DataTraining.findAll().then((dataTraining) => {
+  app.get('/', (req, res) => res.render('index'));
+  app.get('/try', (req, res) => res.render('try'));
+
+  app.head('/', (req, res, next) => {
+    DataTrainingGLCM.findAll().then((dataTraining) => {
       res.json({
         status: 'success',
         data: dataTraining.map((item) => ({
@@ -175,7 +305,6 @@ sequelize.sync({
 
   app.use((req, res, next) => next(HTTPErrors(404)));
   app.use((error, req, res, next) => {
-    console.log(error);
     const errorStatus = error.status || 500;
     if (res.headersSent) {
       return next();

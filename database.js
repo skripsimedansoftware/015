@@ -14,7 +14,7 @@ const sequelize = new Sequelize(
   },
 );
 
-const DataTraining = sequelize.define('DataTraining', {
+const DataTrainingGLCM = sequelize.define('DataTrainingGLCM', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -33,10 +33,29 @@ const DataTraining = sequelize.define('DataTraining', {
     allowNull: false,
   },
 }, {
-  tableName: 'data_training',
+  tableName: 'data_training_glcm',
+});
+
+const DataTrainingHistogram = sequelize.define('DataTrainingHistogram', {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  label: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  data: {
+    type: DataTypes.TEXT('long'),
+    allowNull: false,
+  },
+}, {
+  tableName: 'data_training_histogram',
 });
 
 module.exports = {
   sequelize,
-  DataTraining,
+  DataTrainingGLCM,
+  DataTrainingHistogram,
 };

@@ -1,9 +1,448 @@
 {% extends "base.njk" %}
 
-{% block title %}
-Hello World
-{% endblock %}
+{% block pageContent %}
+<div class="container-fluid mt-5">
+  <h1 class="mb-4">Egg Classifier</h1>
+  <h2>Train / Try</h2>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="label" class="form-label">Label:</label>
+      <input type="text" id="label" name="label" class="form-control">
+    </div>
 
-{% block content %}
-GLCM
-{% endblock %}
+    <div class="mb-3">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="train" name="train">
+        <label class="form-check-label" for="train">Train</label>
+      </div>
+      <label for="increment" class="form-label">Increment:</label>
+      <input type="text" id="increment" name="increment" class="form-control">
+    </div>
+
+    <div class="mb-3">
+      <label for="image" class="form-label">Image:</label>
+      <input type="file" id="image" name="image" accept="image/*" class="form-control" required>
+    </div>
+
+    <button type="submit" id="upload" class="btn btn-primary">Upload</button>
+  </form>
+
+  <div class="row my-4 d-none" id="mammamiaTools">
+    <h4>Mamma Mia Tools</h4>
+    <div class="col-12 my-4">
+      <button type="button" id="copyGLCM" class="btn btn-primary">Copy GLCM</button>
+    </div>
+    <div class="col-12 my-4">
+      <ul id="list-button-copy-formula"></ul>
+    </div>
+  </div>
+
+  <div class="row my-4 d-none" id="displayDataSection">
+    <div class="col-12 col-lg-4">
+      <table id="GLCMTableContrast" class="table" style="width: 100%;">
+        <thead>
+          <tr>
+            <th colspan="2" class="text-center">Contrast</th>
+          </tr>
+          <tr>
+            <th>Corner</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <table id="GLCMTableEnergy" class="table" style="width: 100%;">
+        <thead>
+          <tr>
+            <th colspan="2" class="text-center">Energy</th>
+          </tr>
+          <tr>
+            <th>Corner</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <table id="GLCMTableHomogeneity" class="table" style="width: 100%;">
+        <thead>
+          <tr>
+            <th colspan="2" class="text-center">Homogeneity</th>
+          </tr>
+          <tr>
+            <th>Corner</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+
+    <div class="col-12 col-lg-12 my-5 m-2" id="formula-section">
+      <div class="row formula-section" id="formula-section-list"></div>
+    </div>
+
+    <div class="col-12 col-lg-12 my-5">
+      <h3>Color Histogram</h3>
+      <canvas id="colorHistogramChart"></canvas>
+    </div>
+  </div>
+
+  <div class="row knn-section d-none">
+    <div class="col-6">
+      <div id="KNNGLCMSection" class="my-2">
+        <h3>KNN GLCM <span id="KNNGLCMResult"></span></h3>
+        <table id="KNNGLCMTable" class="table" style="width: 100%;">
+          <thead>
+            <th>Label</th>
+            <th>Distance</th>
+          </thead>
+        </table>
+      </div>
+    </div>
+    <div class="col-6">
+      <div id="KNNColorHistogramSection" class="my-2">
+        <h3>KNN Color Histogram <span id="KNNColorHistogramResult"></span></h3>
+        <table id="KNNColorHistogramTable" class="table" style="width: 100%;">
+          <thead>
+            <th>Label</th>
+            <th>Distance</th>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="screenshotModal" tabindex="-1" aria-labelledby="screenshotModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="screenshotModalLabel">Formula Mamma Mia Mantab</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="displayCanvasFormula"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock pageContent %}
+
+{% block pageScript %}
+<script>
+  const allGLCMData = [];
+  const generateFormula = (VARIABLE_NAME = 'distance', VARIABLE_NAME_1 = 'x1', VARIABLE_NAME_2 = 'x2', NILAI_X1 = 0, NILAI_X2 = 0, RESULT = 0) => {
+    const mathML = `<math xmlns="http://www.w3.org/1998/Math/MathML">
+      <mrow>
+        <mi>${VARIABLE_NAME}</mi>
+        <mspace width="1em"></mspace>
+        <mo>(</mo>
+        <mspace width="0.2em"></mspace>
+        <mrow>
+          <mi>${VARIABLE_NAME_1}</mi>
+          <mo>,</mo>
+          <mi>${VARIABLE_NAME_2}</mi>
+        </mrow>
+        <mspace width="0.2em"></mspace>
+        <mo>)</mo>
+        <mo>=</mo>
+        <mspace width="0.2em"></mspace>
+        <msqrt>
+          <mspace width="0.2em"></mspace>
+          <msup>
+            <mrow>
+              <mo>(</mo>
+              <mi>${NILAI_X1}</mi>
+              <mo>-</mo>
+              <mi>${NILAI_X2}</mi>
+              <mo>)</mo>
+            </mrow>
+            <mn>2</mn>
+          </msup>
+        </msqrt>
+        <mo>=</mo>
+        <mspace width="0.2em"></mspace>
+        <mo>${RESULT}</mo>
+      </mrow>
+    </math>`;
+
+    return mathML;
+  };
+
+  const GLCMTableContrast = $('#GLCMTableContrast').DataTable({
+    columns: [ { data: 'corner' }, { data: 'value' } ],
+    ordering: false,
+    pageLength: 4,
+    paging: false,
+    searching: false,
+    lengthChange: false,
+  });
+
+  const GLCMTableEnergy = $('#GLCMTableEnergy').DataTable({
+    columns: [ { data: 'corner' }, { data: 'value' } ],
+    ordering: false,
+    pageLength: 4,
+    paging: false,
+    searching: false,
+    lengthChange: false,
+  });
+
+  const GLCMTableHomogeneity = $('#GLCMTableHomogeneity').DataTable({
+    columns: [ { data: 'corner' }, { data: 'value' } ],
+    ordering: false,
+    pageLength: 4,
+    paging: false,
+    searching: false,
+    lengthChange: false,
+  });
+
+  const GLCMTables = { GLCMTableContrast, GLCMTableEnergy, GLCMTableHomogeneity }
+
+  // Display GLCM
+  function displayGLCMData(data) {
+    const tablePrefix = 'GLCMTable';
+    const regexKey = /(\w+)_(\d+)/;
+
+    GLCMTableContrast.clear();
+    GLCMTableEnergy.clear();
+    GLCMTableHomogeneity.clear();
+
+    Object.keys(data).forEach((corner) => {
+      const matchCorner = corner.match(regexKey);
+      const tableName = `GLCMTable${matchCorner[1].charAt(0).toUpperCase() + matchCorner[1].slice(1)}`;
+      GLCMTables[tableName].row.add({
+        corner: `${matchCorner[1]} ${matchCorner[2]}°`,
+        value: data[matchCorner[0]].toString().replace('.', ',')
+      }).draw();
+    });
+
+    const copyData = [
+      ...GLCMTableContrast.buttons.exportData().body,
+      ...GLCMTableEnergy.buttons.exportData().body,
+      ...GLCMTableHomogeneity.buttons.exportData().body,
+    ]
+
+    const tsvData = copyData.map(row => row.join('\t')).join('\n');
+    new ClipboardJS('#copyGLCM', {
+      text: function(trigger) {
+        return tsvData;
+      }
+    });
+  }
+
+  // Display chart
+  function displayColorHistogramData(colorHistogramData) {
+    const binLabels = ['Bin 1', 'Bin 2', 'Bin 3', 'Bin 4', 'Bin 5', 'Bin 6', 'Bin 7', 'Bin 8', 'Bin 9', 'Bin 10', 'Bin 11', 'Bin 12', 'Bin 13', 'Bin 14', 'Bin 15', 'Bin 16'];
+
+    const chartCanvas = document.getElementById('colorHistogramChart');
+    const chartContext = chartCanvas.getContext('2d');
+
+    // Clear existing chart
+    if (window.colorHistogramChart) {
+      if (typeof window.colorHistogramChart.destroy === 'function') {
+        window.colorHistogramChart.destroy();
+      }
+    }
+
+    // Chart instance
+    window.colorHistogramChart = new Chart(chartContext, {
+      type: 'bar',
+      data: {
+        labels: binLabels,
+        datasets: [{
+          label: 'Color Histogram',
+          data: colorHistogramData,
+          backgroundColor: 'rgba(75, 192, 192, 0.5)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Value Range'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Frequency'
+            },
+            beginAtZero: true,
+            max: Math.max(...colorHistogramData) + 5
+          }
+        }
+      }
+    });
+  }
+
+  const DTGLCM =  $('#KNNGLCMTable').DataTable({
+    buttons: ['colvis', 'copy'],
+    data: [],
+    columns: [ { data: 'label' }, { data: 'distance' } ],
+    pageLength: 18,
+    paging: false,
+    searching: false,
+    lengthChange: false,
+  });
+
+  const DTColorHistogram =  $('#KNNColorHistogramTable').DataTable({
+    buttons: ['colvis', 'copy'],
+    data: [],
+    columns: [ { data: 'label' }, { data: 'distance' } ],
+    pageLength: 18,
+    paging: false,
+    searching: false,
+    lengthChange: false,
+  });
+
+  function displayKNNGLCM(data) {
+    DTGLCM.clear().rows.add(data).draw();
+  }
+
+  function displayKNNColorHistogram(data) {
+    DTColorHistogram.clear().rows.add(data).draw();
+  }
+
+  function tex2img(formula, callback) {
+    MathJax.Hub.Queue(function () {
+        var wrapper = MathJax.HTML.Element("span", {}, formula);
+        MathJax.Hub.Typeset(wrapper, function () {
+            var svg = wrapper.getElementsByTagName("svg")[0];
+            svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            var image = new Image();
+            image.src = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svg.outerHTML)));
+            image.onload = function () {
+                var canvas = document.createElement('canvas');
+                canvas.width = image.width;
+                canvas.height = image.height;
+                var context = canvas.getContext('2d');
+                context.drawImage(image, 0, 0);
+                var img = '<img src="' + canvas.toDataURL('image/png') + '"/>';
+                callback(img);
+            };
+        });
+    })
+  }
+
+  function upload(formData) {
+    $.ajax({
+      url: '/upload',
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        $('#mammamiaTools').removeClass('d-none');
+        var increment= $('#increment').val();
+        if (!Number.isNaN(parseFloat(increment))) {
+          $('#increment').val(parseFloat(increment) + 1)
+        }
+
+        displayGLCMData(response.data.GLCM);
+        displayColorHistogramData(response.data.colorHistogram);
+
+        if (formData.get('train') === 'false') {
+          const GLCMData = response.data.GLCM;
+          const GLCMItems = Object.keys(GLCMData);
+          const labelsName = [];
+
+          let labelNum = 0;
+          for (let train = 0; train < allGLCMData.length; train++) {
+            if (labelsName.indexOf(allGLCMData[train].label) === -1) {
+                labelsName.push(allGLCMData[train].label);
+                labelNum = 1;
+              } else {
+                labelNum = labelNum += 1;
+              }
+
+            let formulaList = '';
+            const formulaSection = allGLCMData[train].label.replace(/\s/g, '-')+'-'+labelNum;
+            // $('.formula-section').append(`<h4>${allGLCMData[train].label} - ${labelNum}</h4>`);
+            formulaList += `<h4>${allGLCMData[train].label} - ${labelNum}</h4>\n`;
+            $('.formula-section').append(`<div class="col-12" id="${formulaSection}"></div>`);
+            for (let key = 0; key < GLCMItems.length; key++) {
+              var glcmItemName = GLCMItems[key].split('_');
+              const GLCMResult = (GLCMData[GLCMItems[key]]-allGLCMData[train].data[GLCMItems[key]])*2;
+              const formula = generateFormula(glcmItemName[0]+glcmItemName[1]+'°',
+                glcmItemName[0]+glcmItemName[1]+'° uji', glcmItemName[0]+glcmItemName[1]+'° latih',
+                GLCMData[GLCMItems[key]], allGLCMData[train].data[GLCMItems[key]],
+                GLCMResult
+              );
+
+              formulaList += formula;
+            }
+
+            $('#list-button-copy-formula').append(`<li><button type="button" class="btn btn-primary btn-copy-formula" section-id="${formulaSection}" data-bs-toggle="modal" data-bs-target="#screenshotModal">${allGLCMData[train].label} - ${labelNum}</button></li>`);
+            $('#'+formulaSection).html(formulaList);
+          }
+
+          $(document).on('click', '.btn-copy-formula', (e) => {
+            e.preventDefault();
+            const sectionId = $(e.currentTarget).attr('section-id');
+            MathJax.typesetPromise([document.getElementById(sectionId)]).then(() => {
+              html2canvas(document.getElementById(sectionId)).then(function (canvas) {
+                $('#displayCanvasFormula').html(`<img src="${canvas.toDataURL('image/png')}" />`);
+              }, console.log);
+            }, console.log)
+          });
+
+          $('.knn-section').removeClass('d-none');
+          $('#KNNGLCMResult').empty();
+          $('#KNNGLCMResult').text(` : ${response.data.KNNGLCM.current.label}`);
+          displayKNNGLCM(response.data.KNNGLCM.results);
+
+          $('#KNNColorHistogramResult').empty();
+          $('#KNNColorHistogramResult').text(` : ${response.data.KNNColorHistogram.current.label}`);
+          displayKNNColorHistogram(response.data.KNNColorHistogram.results);
+        } else {
+          $('.knn-section').addClass('d-none');
+        }
+
+        $('#displayDataSection').removeClass('d-none');
+        $('button#upload').removeClass('disabled');
+      },
+      error: function(error) {
+        $('button#upload').removeClass('disabled');
+      }
+    });
+  }
+
+  $(document).ready(function() {
+    $.get('/data').then((data) => {
+      if (data?.GLCM.length > 0) {
+        for (let i = 0; i < data.GLCM.length; i++) {
+          allGLCMData.push(data.GLCM[i]);
+        }
+      }
+    });
+
+    $('#uploadForm').submit(function(e) {
+      e.preventDefault();
+      $('#displayDataSection').addClass('d-none');
+      $('button#upload').addClass('disabled');
+
+      var label = $('#label').val();
+      var increment= $('#increment').val();
+      var train = $('#train').prop('checked');
+      var image = $('#image')[0].files[0];
+
+      var formData = new FormData();
+      formData.append('label', label);
+      formData.append('increment', increment);
+      formData.append('train', train);
+      formData.append('image', image);
+
+      upload(formData);
+    });
+  });
+</script>
+{% endblock pageScript %}
