@@ -1,12 +1,25 @@
 import { View } from "react-native";
 import { Button } from "native-base";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Camera } from "expo-camera";
 
 export default function CameraScreen({ navigation }) {
   const [text, setText] = useState("Ganti Kamera");
   const [type, setType] = useState(Camera.Constants.Type.back);
+  const [permission, requestPermission] = Camera.useCameraPermissions();
   const cameraRef = useRef(null);
+
+  useEffect(() => {
+    if (!permission) {
+      (async () => {
+        await requestPermission();
+      })();
+    }
+
+    return () => {
+      // second
+    };
+  }, []);
 
   return (
     <Camera

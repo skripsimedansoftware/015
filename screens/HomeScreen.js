@@ -21,7 +21,8 @@ import AppBar from "../components/AppBar";
 import UINSULogo from "../assets/logo.png";
 
 const API = axios.create({
-  baseURL: "http://192.168.43.76:8081",
+  baseURL: "http://103.117.57.252:8001",
+  // baseURL: "http://192.168.43.76:8080",
 });
 
 export default function HomeScreen({ navigation, route }) {
@@ -244,6 +245,8 @@ export default function HomeScreen({ navigation, route }) {
                   if (trainingModeActive) {
                     formData.append("train", true);
                     formData.append("label", trainLabel);
+                  } else {
+                    formData.append("train", false);
                   }
 
                   API.post("/upload", formData, {
@@ -277,7 +280,7 @@ export default function HomeScreen({ navigation, route }) {
                         },
                       });
                     },
-                    () => {
+                    (err) => {
                       setUpload({ isUploading: false, result: {} });
                       setHeaderMessage({
                         show: true,

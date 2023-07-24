@@ -18,11 +18,8 @@ export default function ResultScreen({ navigation, route }) {
     navigation.setOptions({
       title: route.params.training.active
         ? `Data Latih ${route.params.training.label}`
-        : `Hasil Klasifikasi : ${route.params.data.KNN.current.label}`,
+        : `Hasil Klasifikasi : ${route.params.data.KNNGLCM.current.label}`,
     });
-
-    // console.log('KNN', route.params.data.KNN)
-    // console.log('GLCM', route.params.data.GLCM)
   }, []);
 
   const displayGLCM = (data) => (
@@ -206,7 +203,7 @@ export default function ResultScreen({ navigation, route }) {
             {displayGLCM(route.params.data.GLCM)}
           </View>
         )}
-        {route.params?.data?.KNN && displayKNN(route.params.data.KNN)}
+        {route.params?.data?.KNNGLCM && displayKNN(route.params.data.KNNGLCM)}
       </View>
     </View>
   );

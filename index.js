@@ -19,7 +19,7 @@ function MobileApp() {
 
 if (Platform.OS === "web") {
   const root = createRoot(
-    document.getElementById("root") ?? document.getElementById("main")
+    document.getElementById("root") ?? document.getElementById("main"),
   );
   root.render(<App />);
 } else {

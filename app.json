@@ -10,7 +10,13 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Pengen liat galerimu"
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your storage."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
         }
       ]
     ],
