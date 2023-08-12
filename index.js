@@ -236,7 +236,7 @@ sequelize.sync({
         images,
       };
 
-      if (req.body?.train.toString().toLowerCase() === 'false') {
+      if (req.body?.train && req.body.train.toString().toLowerCase() === 'false') {
         const KNNResultGLCM = await KNN;
         const KNNResultColorHistogram = await KNNColorHistogram;
 
@@ -257,7 +257,7 @@ sequelize.sync({
         });
       }
 
-      if (req.body?.train.toString().toLowerCase() === 'true') {
+      if (req.body?.train && req.body.train.toString().toLowerCase() === 'true') {
         await DataTrainingGLCM.create({
           label: req.body.label,
           data: JSON.stringify(GLCMData),
